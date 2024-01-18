@@ -16,8 +16,75 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+					<h4>
+						Что такое NGRX?
+					</h4>
+					<p class="fragment fade-up">
+						NGRX — это группа библиотек, «вдохновленных» шаблоном Redux, который, в свою очередь, «вдохновлен» шаблоном Flux.
+					</p>
+				</section>
+				<section>
+					<h4>
+						Три важных принципа модели Redux
+					</h4>
+					<ol>
+						<li class="fragment fade-in-then-semi-out">Единственный источник правды</li>
+						<li class="fragment fade-in-then-semi-out">Состояние read-only (только для чтения)</li>
+						<li class="fragment fade-in-then-semi-out">Изменения вносятся с простыми функциями</li>
+					</ol>
+				</section>
+				<section>
+					<h4>
+						Итог
+					</h4>
+					<section>
+						<p class="fragment fade-up">
+							Плюсы
+						</p>
+						<ol>
+							<li class="fragment fade-right">Поскольку у нас есть единый источник правды, и вы не можете напрямую изменить состояние, приложения будут работать более согласованно</li>
+							<li class="fragment fade-right">Использование redux шаблона дает нам много интересных функций, облегчающих отладку</li>
+							<li class="fragment fade-right">Тестирование приложений становится проще</li>
+						</ol>
+					</section>
+					<section>
+						<p class="fragment fade-up">
+							Минусы
+						</p>
+						<ol>
+							<li class="fragment fade-right">Сложность изучения</li>
+							<li class="fragment fade-right">Добавление большого количества кода при добавлении нового состояния</li>
+						</ol>
+					</section>
+				</section>
+				<section>
+					<h4>
+						Углубляемся
+					</h4>
+					<img class="fragment fade-up" src="assets/img/state-management-lifecycle.png"/>
+				</section>
+				<section>
+					<h4>
+						Примеры кода СМП
+					</h4>
+					<section>
+						<p class="fragment fade-up">Какой-то эффект</p>
+						<pre class="fragment fade-up"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						@Effect()
+						public currentPatient$: Observable<Action> = this.actions$.pipe(
+							ofType(loadAnamnesis),
+							switchMap(() => this.store.select(selectPatient)),
+							filter(Boolean),
+							map((patient: IPatientInfoStateItem) =>
+								loadCurrentPatient(
+								{ patient: patient.identified?.result?.patient }
+							),
+							),
+						);
+					</script></code></pre>
+					</section>
+				</section>
 			</div>
 		</div>
 
