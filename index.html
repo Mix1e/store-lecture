@@ -69,19 +69,287 @@
 						Примеры кода СМП
 					</h4>
 					<section>
-						<p class="fragment fade-up">Какой-то эффект</p>
-						<pre class="fragment fade-up"><code class="typescript" data-trim data-line-numbers><script type="text/template">
-						@Effect()
-						public currentPatient$: Observable<Action> = this.actions$.pipe(
-							ofType(loadAnamnesis),
-							switchMap(() => this.store.select(selectPatient)),
-							filter(Boolean),
-							map((patient: IPatientInfoStateItem) =>
-								loadCurrentPatient(
-								{ patient: patient.identified?.result?.patient }
+						<span>@ngrx/store: 10.1.2</span>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то селектор</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						export const allergyHistoryQuestionnaireSelector = createSelector(
+							(state: any) => state[STORE_KEY],
+							(state: any): IAllergyHistoryQuestionnaireState => state.allergyHistoryQuestionnaire,
+						);
+
+						export const allergyHistoryQuestionnaireVersionsSelector = createSelector(
+							(state: any) => state[STORE_KEY],
+							(state: any): IAllergyHistoryQuestionnaireVersionsState =>
+								state.allergyHistoryQuestionnaire.history,
+						);
+
+						export const allergyHistoryQuestionnaireVisualizationSelector = createSelector(
+							(state: any) => state[STORE_KEY],
+							(state: any): IAllergyHistoryQuestionnaireVisualizationState => {
+								return state.allergyHistoryQuestionnaire.visualization;
+							},
+						);
+
+						export const isAllergyHistoryQuestionnaireVisibleSelector = createSelector(
+							(state: any) => state[STORE_KEY],
+							(state: any): boolean => {
+								return ![State.EMPTY, State.PENDING].includes(
+									state.allergyHistoryQuestionnaire.visualization.state,
+								);
+							},
+						);
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Снова какой-то селектор</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						export const familySelector = createSelector(
+							(state: any) => state[STORE_KEY],
+							(state: IAnamnesisStore): IFamilyState => state.family,
+						);
+
+						export const familyDocSelector = createSelector(
+							familySelector,
+							(state: IFamilyState): IFamilyDocState => state.doc,
+						);
+
+						export const familyTreeSelector = createSelector(
+							familySelector,
+							(state: IFamilyState): IFamilyTreeState => state.tree,
+						);
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какие-то действия</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						const ns: createNsFn = createNsType('[ANAMNESIS Allergy history questionnaire]');
+
+						export const loadVersions = createAction(ns('load versions'), props<{ patientId: string }>());
+						export const loadVersionsSuccess = createAction(
+						ns('load versions success'),
+						props<IAllergyHistoryQuestionnaireVersionsPayload>(),
+						);
+						export const loadVersionsFailure = createAction(
+							ns('load versions failure'),
+							props<{ error: unknown }>(),
+						);
+
+						export const loadVisualizationEmpty = createAction(ns('load visualization empty'));
+						export const loadVisualizationSuccess = createAction(
+							ns('load visualization success'),
+							props<IAllergyHistoryQuestionnaireVisualizationPayload>(),
+						);
+						export const loadVisualizationFailure = createAction(
+							ns('load visualization failure'),
+							props<{ error: unknown }>(),
+						);
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то редуктор</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						const initialState: ILifeEditorState = {
+							state: 'pending',
+						};
+
+						export const lifeEditorReducer = createReducer(
+							initialState,
+							on(editLifeDocument, (): ILifeEditorState => ({ ...initialState })),
+							on(
+								editLifePreparedDocument,
+								(state: ILifeEditorState, data: { items: ICompositionDoc[] }): ILifeEditorState => ({
+									...state,
+									data: data.items,
+									state: 'ready',
+								}),
 							),
+							on(
+								editLifePreparedDocumentFailure,
+								(state: ILifeEditorState, error: unknown): ILifeEditorState => ({
+									...state,
+									error,
+									state: 'error',
+								}),
 							),
 						);
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то эффект</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						@Effect()
+						public form$: Observable<Action> = this.actions$.pipe(
+							ofType(editLifeDocument),
+							switchMap(({ items }: { items: ICompositionDoc[] }) => {
+								const [mainDocument]: ICompositionDoc[] = items;
+
+								if (
+									mainDocument.documentContext &&
+									isOldLifeAnamnesis(mainDocument.documentContext.cct)
+								) {
+									return this.anamnesisService
+										.upgradeAnamnesis(
+											mainDocument.documentContext,
+											CCT.LIFE_HISTORY_QUESTIONNAIRE_v3,
+										)
+										.pipe(
+											map((upgradedMainDocument: ICompositionDoc) => [
+												upgradedMainDocument,
+												items[1],
+											]),
+										);
+								}
+
+								return of(items);
+							}),
+							map((items: ICompositionDoc[]) => editLifePreparedDocument({ items })),
+							catchError((error: unknown) => {
+								console.error(error);
+								return of(editLifePreparedDocumentFailure({ error }));
+							}),
+						);
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то модуль</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						export const ANAMNESIS_STORE = new InjectionToken<any>('Anamnesis Reducer', {
+							factory: () =>
+								({
+									mode: modeReducer,
+									lifeDoc: lifeReducer,
+									lifeEditor: lifeEditorReducer,
+									family: combineReducers({
+										doc: familyDocReducer,
+										tree: familyTreeReducer,
+									}),
+									social: socialReducer,
+									allergyHistoryQuestionnaire: allergyHistoryQuestionnaireReducer,
+								} as ActionReducerMap<IAnamnesisStore, Action>),
+						});
+
+						@NgModule({
+							imports: [
+								EffectsModule.forFeature([RefreshEffects, AnamnesesEffects, LifeEditorEffects]),
+								StoreModule.forFeature<IAnamnesisStore>(STORE_KEY, ANAMNESIS_STORE),
+							],
+						})
+						export class AnamnesisStoreModule {}
+					</script></code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h4>
+						Примеры кода Планировщика ресурсов
+					</h4>
+					<section>
+						<span>@ngrx/store: 12.4.0</span>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то селектор</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							export const getStatePart: (state: ApplicationsStatePart) => ApplicationsStateModel = (
+							state: ApplicationsStatePart,
+							): ApplicationsStateModel => state.applications;
+
+							export const getListFilters: MemoizedSelector<ApplicationsStatePart, IListFilters> = createSelector(
+							getStatePart,
+							(state: ApplicationsStateModel): IListFilters => state.listFilters,
+							);
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какие-то действия</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						// enum
+						export enum ApplicationsAction {
+							LIST_FILTERS_UPDATE = 'applications.LIST_FILTERS_UPDATE',
+						}
+
+						// LIST_FILTERS_UPDATE
+						export interface IListFiltersUpdateProps {
+							payload: IListFilters;
+						}
+
+						export interface IListFiltersUpdate extends Action, IListFiltersUpdateProps {
+							type: ApplicationsAction.LIST_FILTERS_UPDATE;
+						}
+
+						export const ListFiltersUpdate: ActionCreatorWithProps<
+							ApplicationsAction.LIST_FILTERS_UPDATE,
+							IListFiltersUpdateProps
+						> = createAction(ApplicationsAction.LIST_FILTERS_UPDATE, props<IListFiltersUpdateProps>());
+
+						// actions union
+						export type ApplicationsActions = IListFiltersUpdate;
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то редуктор</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						const reducer: ActionReducer<ApplicationsStateModel, ApplicationsActions> = createReducer(
+							defaultState,
+							on(
+								ListFiltersUpdate,
+								(state: ApplicationsStateModel, props: IListFiltersUpdateProps): ApplicationsStateModel =>
+									Object.assign({}, state, { listFilters: props.payload }),
+							),
+						);
+
+						export const applicationsReducer: ReducerFactory<ApplicationsStateModel, ApplicationsActions> = (
+							stateModel: ApplicationsStateModel | undefined,
+							actions: ApplicationsActions,
+						): ApplicationsStateModel => reducer(stateModel, actions);
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то state?</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							export interface IApplicationsState {
+								listFilters: IListFilters;
+							}
+
+							export const defaultState: IApplicationsState = {
+								listFilters: defaultListFilters,
+							};
+
+							export type ApplicationsStateModel = IApplicationsState;
+
+							export interface ApplicationsStatePart {
+								applications: ApplicationsStateModel;
+							}
+					</script></code></pre>
+					</section>
+					<section>
+						<p class="fragment fade-up">Какой-то модуль</p>
+						<pre class="fragment fade-up" style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						export const AppReducer: InjectionToken<ActionReducerMap<unknown, Action>> = new InjectionToken<
+							ActionReducerMap<unknown, Action>
+						>('AppReducer', {
+							factory: () => ({
+								applications: applicationsReducer,
+								assignments: assignmentsReducer,
+								departments: departmentsReducer,
+								projects: projectsReducer,
+								skills: skillsReducer,
+								users: usersReducer,
+							}),
+						});
+						@NgModule({
+							declarations: [AppComponent],
+							imports: [
+								...
+								StoreModule.forRoot(AppReducer),
+								EffectsModule.forRoot(AppEffects),
+
+								...
+							],
+							....
+						})
+						export class AppModule {}
 					</script></code></pre>
 					</section>
 				</section>
