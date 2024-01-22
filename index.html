@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>Store</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
@@ -352,6 +352,166 @@
 						export class AppModule {}
 					</script></code></pre>
 					</section>
+				</section>
+				<section>
+					<h3>Различия между версиями NGRX</h3>
+				</section>
+				<section>
+					<h3>V11</h3>
+					<section>
+						<strong>createAction больше не принимает {} в качестве props, поскольку {} совместимо с примитивными типами</strong>
+					</section>
+					<section>
+						<span>До</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const customerPageLoaded = createAction('[Customer Page] Loaded', props<{}>());
+
+							customerPageLoaded({}); // ✔️
+							customerPageLoaded({ foo: 'bar' }); // ✔️
+							customerPageLoaded(0); // 👈 no error
+							customerPageLoaded(false); // 👈 no error
+						</script></code></pre>
+						<span>После</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const customerPageLoaded = createAction(
+							'[Customer Page] Loaded',
+							props<Record<string, unknown>>(),
+							);
+						</script></code></pre>
+					</section>
+
+					<section>
+						<strong>
+							Декоратор эффектов, @Effect, устарел в пользу метода createEffect.
+						</strong>
+					</section>
+					<section>
+						<span>До</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							@Effect()
+							login$ = this.actions$.pipe(...);
+						</script></code></pre>
+						<span>После</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							login$ = createEffect(() => {
+							return this.actions$.pipe(...);
+							});
+						</script></code></pre>
+					</section>
+				</section>
+
+
+				<section>
+					<h3>V12</h3>
+					<section>
+							<p>
+								Селекторы с props устарели в пользу "обычных" factory селекторов.
+								Factory селекторы обладают следующими преимуществами:
+							</p>
+							<ol>
+								<li>Легче писать</li>
+								<li>Селекторы типизированы</li>
+								<li>Дочерние селекторы корректно мемоизируются<li>
+							</ol>
+					</section>
+					<section>
+							<span>До</span>
+							<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+								const selectCustomer = createSelector(
+									selectCustomers,
+									(customers, props: { customerId: number }) => {
+									  return customers[props.customerId];
+									}
+								);
+
+								// Or if the selector is already defined as a factory selector
+
+								const selectCustomer = () =>
+								  createSelector(
+									selectCustomers,
+									(customers, props: { customerId: number }) => {
+									  return customers[props.customerId];
+									}
+								  );
+							</script></code></pre>
+							<span>После</span>
+							<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const selectCustomer = (customerId: number) =>
+							  createSelector(
+								selectCustomers,
+								(customers) => {
+								  return customers[customerId];
+								}
+							  );
+							</script></code></pre>
+					</section>
+				</section>
+
+
+				<section>
+					<h3>V13</h3>
+
+					<section>
+						<strong>
+							createSelector теперь можно комбинировать с неограниченным количеством дочерних селекторов, которое ранее было ограничено 8 дочерними селекторами.
+						</strong>
+					</section>
+					<section>
+						<span>До</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const selector = createSelector<State, Customer, Order[], CustomerWithOrder>
+						</script></code></pre>
+						<span>После</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							//                  needs to be a tuple 👇
+							const selector =  createSelector<State, [Customer, Order[]], CustomerWithOrder>
+						</script></code></pre>
+					</section>
+
+					<section>
+						<strong>
+							Пропсы действия, созданного с помощью createAction, не могут быть примитивного типа (string, number, boolean).
+							Кроме того, обновлены сообщения об ошибках, чтобы более четко указывать, что не так.
+						</strong>
+					</section>
+					<section>
+						<span>До</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const action = createAction('[Source] Event', props<string>());
+						</script></code></pre>
+						<span>После</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const action = createAction('[Source] Event', props<{ name: string }>());
+						</script></code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h3>V14</h3>
+					<section>
+						<strong>
+							Изменения коснулись директивы *ngrxLet
+						</strong>
+					</section>
+				</section>
+
+				<section>
+					<h3>V15</h3>
+					<section>
+						<strong>
+
+						</strong>
+					</section>
+					<section>
+						<span>До</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						</script></code></pre>
+						<span>После</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+
+						</script></code></pre>
+					</section>
+
 				</section>
 			</div>
 		</div>
