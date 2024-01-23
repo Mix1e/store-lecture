@@ -404,46 +404,46 @@
 				<section>
 					<h3>V12</h3>
 					<section>
-							<p>
-								Селекторы с props устарели в пользу "обычных" factory селекторов.
-								Factory селекторы обладают следующими преимуществами:
-							</p>
-							<ol>
-								<li>Легче писать</li>
-								<li>Селекторы типизированы</li>
-								<li>Дочерние селекторы корректно мемоизируются<li>
-							</ol>
+						<span>
+							Селекторы с props устарели в пользу "обычных" factory селекторов.
+							Потому что...:
+						</span>
+						<ol>
+							<li>Легче писать</li>
+							<li>Селекторы типизированы</li>
+							<li>Дочерние селекторы корректно мемоизируются<li>
+						</ol>
 					</section>
 					<section>
-							<span>До</span>
-							<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
-								const selectCustomer = createSelector(
-									selectCustomers,
-									(customers, props: { customerId: number }) => {
-									  return customers[props.customerId];
-									}
-								);
+						<span>До</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const selectCustomer = createSelector(
+								selectCustomers,
+								(customers, props: { customerId: number }) => {
+								  return customers[props.customerId];
+								}
+							);
 
-								// Or if the selector is already defined as a factory selector
+							// Or if the selector is already defined as a factory selector
 
-								const selectCustomer = () =>
-								  createSelector(
-									selectCustomers,
-									(customers, props: { customerId: number }) => {
-									  return customers[props.customerId];
-									}
-								  );
-							</script></code></pre>
-							<span>После</span>
-							<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
-							const selectCustomer = (customerId: number) =>
+							const selectCustomer = () =>
 							  createSelector(
 								selectCustomers,
-								(customers) => {
-								  return customers[customerId];
+								(customers, props: { customerId: number }) => {
+								  return customers[props.customerId];
 								}
 							  );
-							</script></code></pre>
+						</script></code></pre>
+						<span>После</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+						const selectCustomer = (customerId: number) =>
+						  createSelector(
+							selectCustomers,
+							(customers) => {
+							  return customers[customerId];
+							}
+						  );
+						</script></code></pre>
 					</section>
 				</section>
 
@@ -499,19 +499,71 @@
 					<h3>V15</h3>
 					<section>
 						<strong>
+							Удаление @Effect
+						</strong>
+					</section>
+				</section>
 
+				<section>
+				<h3>V16</h3>
+					<section>
+						<strong>
+							Функции projector селекторов, сгенерированных createFeature, теперь строго типизированы
 						</strong>
 					</section>
 					<section>
 						<span>До</span>
 						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const counterFeature = createFeature({
+							  name: 'counter',
+							  reducer: createReducer({ count: 0 }),
+							});
+
+							counterFeature.selectCount.projector
+							// ^ type: (...args: any[]) => number
 						</script></code></pre>
 						<span>После</span>
 						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							const counterFeature = createFeature({
+							  name: 'counter',
+							  reducer: createReducer({ count: 0 }),
+							});
 
+							counterFeature.selectCount.projector
+							// ^ type: (featureState: { count: number; }) => number
 						</script></code></pre>
 					</section>
+				</section>
 
+				<section>
+				<h3>V17</h3>
+					<section>
+						<strong>
+							Расширение Redux DevTools теперь встраивается не через зону Angular.
+						</strong>
+					</section>
+					<section>
+						<span>До</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							provideStoreDevtools({
+								connectOutsideZone: true
+							}),
+						</script></code></pre>
+						<span>После</span>
+						<pre style="font-size: 16px"><code class="typescript" data-trim data-line-numbers><script type="text/template">
+							provideStoreDevtools({
+								connectInZone: true
+							}),
+						</script></code></pre>
+					</section>
+				</section>
+
+				<section>
+					<h2>Интересные ссылки</h2>
+					<ul>
+						<li><a href="https://ngrx.io/guide/migration/v17">Изменения ngrx</a></li>
+						<li><a href="https://habr.com/ru/companies/tinkoff/articles/735198/">Статья про @ngrx/component-store</a></li>
+					</ul>
 				</section>
 			</div>
 		</div>
